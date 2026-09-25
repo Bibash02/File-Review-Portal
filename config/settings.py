@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,6 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'accounts',
+    'documents',
+
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -79,10 +86,24 @@ DATABASES = {
     }
 }
 
+# if os.environ.get("POSTGRES_DB"):
+#     DATABASES = {
+#         "default": {
+#             "ENGINE": "django.db.backends.postgresql",
+#             "NAME": os.environ["POSTGRES_DB"],
+#             "USER": os.environ.get("POSTGRES_USER", "postgres"),
+#             "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
+#             "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+#             "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+#         }
+#     }
+# else:
+#     DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 
+AUTH_USER_MODEL = "accounts.User"
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -125,3 +146,34 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.ScopedRateThrottle"],
+    "DEFAULT_THROTTLE_RATES": {"uploads": "60/hour", "downloads": "300/hour"},
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+}
+
+# ---------------------------------------------------------------- file handling
+# Lives OUTSIDE anything served statically. Never add this to urls / MEDIA_URL.
+PRIVATE_MEDIA_ROOT = Path(os.environ.get("PRIVATE_MEDIA_ROOT", BASE_DIR / "private_media"))
+
+UPLOAD_MAX_BYTES = 10 * 1024 * 1024            # 10 MB per file
+ALLOWED_UPLOAD_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".docx", ".txt"}
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024  # bigger uploads spill to a temp file
+
+DOWNLOAD_LINK_TTL_SECONDS = 60                 # signed link lifetime
+
+# Scanning: swap to "documents.scanning.ClamAVScanner" in prod.
+FILE_SCANNER = "documents.scanning.NoopScanner"
+CLAMAV_HOST = os.environ.get("CLAMAV_HOST", "localhost")
+CLAMAV_PORT = int(os.environ.get("CLAMAV_PORT", "3310"))
+# True = a file can't be downloaded/approved until a scanner marked it "clean".
+REQUIRE_CLEAN_SCAN = os.environ.get("REQUIRE_CLEAN_SCAN", "0") == "1"
+
+DELETED_FILE_RETENTION_DAYS = 30               # used by `manage.py cleanup_files`
