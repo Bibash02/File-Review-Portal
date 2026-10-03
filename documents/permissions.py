@@ -7,7 +7,6 @@ OWNER = 50
 ADMIN = 100
 LEVEL_NAMES = {ADMIN: "admin", OWNER: "owner", Level.REVIEW: "review", Level.COMMENT: "comment", Level.VIEW: "view"}
 
-
 def access_level(user, document) -> int:
     if user.is_superuser:
         return ADMIN
@@ -15,7 +14,6 @@ def access_level(user, document) -> int:
         return OWNER
     grant = DocumentAccess.objects.filter(document=document, user=user).values_list("level", flat=True).first()
     return grant or 0
-
 
 def load_document(user, document_id, min_level=Level.VIEW):
     """404 if the user has no access at all (don't leak existence), 403 if access is too low."""
@@ -27,7 +25,6 @@ def load_document(user, document_id, min_level=Level.VIEW):
         raise PermissionDenied("You don't have permission to do that on this document.")
     return doc, level
 
-
 def visible_versions(document, level):
     """Reviewers/owner see every version; view/comment grantees only see the approved one."""
     qs = document.versions.filter(deleted_at__isnull=True)
@@ -35,13 +32,11 @@ def visible_versions(document, level):
         return qs
     return qs.filter(pk=document.approved_version_id)
 
-
 def load_version(document, level, version_id):
     version = visible_versions(document, level).filter(pk=version_id).first()
     if not version:
         raise NotFound()
     return version
-
 
 def scan_allows_release(version) -> bool:
     S = DocumentVersion.ScanStatus
@@ -50,7 +45,6 @@ def scan_allows_release(version) -> bool:
     if settings.REQUIRE_CLEAN_SCAN:
         return version.scan_status == S.CLEAN
     return True
-
 
 def can_download(user, version) -> bool:
     document = version.document

@@ -44,6 +44,8 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework.authtoken',
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
 ]
 
 MIDDLEWARE = [
@@ -157,6 +159,8 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {"uploads": "60/hour", "downloads": "300/hour"},
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # ---------------------------------------------------------------- file handling
@@ -177,3 +181,12 @@ CLAMAV_PORT = int(os.environ.get("CLAMAV_PORT", "3310"))
 REQUIRE_CLEAN_SCAN = os.environ.get("REQUIRE_CLEAN_SCAN", "0") == "1"
 
 DELETED_FILE_RETENTION_DAYS = 30               # used by `manage.py cleanup_files`
+
+
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "File Review Portal API",
+    "DESCRIPTION": "API for the File Review Portal",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}

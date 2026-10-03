@@ -4,6 +4,7 @@ from rest_framework import serializers
 from .models import Comment, Document, DocumentVersion, Level
 from .permissions import LEVEL_NAMES, access_level
 from .validators import validate_upload
+from drf_spectacular.utils import extend_schema_field
 
 User = get_user_model()
 
@@ -41,6 +42,7 @@ class DocumentSerializer(serializers.ModelSerializer):
     def _level(self, doc):
         return access_level(self.context["request"].user, doc)
 
+    @extend_schema_field(serializers.BooleanField())
     def get_my_access(self, doc):
         return LEVEL_NAMES.get(self._level(doc))
 

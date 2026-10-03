@@ -14,11 +14,9 @@ from .models import DocumentVersion
 log = logging.getLogger(__name__)
 S = DocumentVersion.ScanStatus
 
-
 class NoopScanner:
     def scan(self, fileobj):
         return S.SKIPPED
-
 
 class ClamAVScanner:
     def scan(self, fileobj):
@@ -27,7 +25,6 @@ class ClamAVScanner:
         cd = clamd.ClamdNetworkSocket(host=settings.CLAMAV_HOST, port=settings.CLAMAV_PORT)
         status, _sig = cd.instream(fileobj)["stream"]
         return S.INFECTED if status == "FOUND" else S.CLEAN
-
 
 def scan_version(version):
     scanner = import_string(settings.FILE_SCANNER)()

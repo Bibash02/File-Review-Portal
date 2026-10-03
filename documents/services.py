@@ -18,7 +18,6 @@ CONTENT_TYPES = {
     ".txt": "text/plain",
 }
 
-
 def clean_filename(raw: str) -> str:
     """User filenames are input: strip paths, weird chars, cap length."""
     base = os.path.basename(raw.replace("\\", "/"))
@@ -28,7 +27,6 @@ def clean_filename(raw: str) -> str:
         safe = "upload"
     stem, ext = os.path.splitext(safe)
     return f"{stem[:100] or 'upload'}{ext.lower()}"
-
 
 @transaction.atomic
 def create_version(document: Document, uploaded_file, user) -> DocumentVersion:

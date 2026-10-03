@@ -24,12 +24,10 @@ from .services import create_version
 User = get_user_model()
 DOWNLOAD_SALT = "documents.download-link"
 
-
 class PayloadTooLarge(APIException):
     status_code = 413
     default_detail = "Upload too large."
     default_code = "payload_too_large"
-
 
 def reject_oversized(request):
     """Cheap early check on Content-Length before DRF parses the body.
@@ -41,7 +39,6 @@ def reject_oversized(request):
     if length > settings.UPLOAD_MAX_BYTES + 64 * 1024:
         raise PayloadTooLarge()
 
-
 def file_response(version):
     try:
         fh = version.file.storage.open(version.file.name, "rb")
@@ -52,7 +49,6 @@ def file_response(version):
     resp["X-Content-Type-Options"] = "nosniff"
     resp["Cache-Control"] = "private, no-store"
     return resp
-
 
 # ---------------------------------------------------------------- documents
 class DocumentViewSet(
@@ -85,7 +81,6 @@ class DocumentViewSet(
         instance.deleted_at = now
         instance.save(update_fields=["deleted_at"])
 
-
 # ---------------------------------------------------------------- versions
 class VersionListCreateView(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -107,7 +102,6 @@ class VersionListCreateView(APIView):
         version = create_version(doc, s.validated_data["file"], request.user)
         return Response(VersionSerializer(version).data, status=status.HTTP_201_CREATED)
 
-
 class VersionDownloadView(APIView):
     throttle_scope = "downloads"
 
@@ -117,7 +111,6 @@ class VersionDownloadView(APIView):
         if not can_download(request.user, version):
             raise PermissionDenied("This file isn't available for download.")
         return file_response(version)
-
 
 class DownloadLinkView(APIView):
     """Short-lived signed link. Handy for browsers/<a href> where you can't set an auth header."""
@@ -135,7 +128,6 @@ class DownloadLinkView(APIView):
                 "expires_in": settings.DOWNLOAD_LINK_TTL_SECONDS,
             }
         )
-
 
 class SignedDownloadView(APIView):
     authentication_classes = []
@@ -158,7 +150,6 @@ class SignedDownloadView(APIView):
             raise NotFound()
         return file_response(version)
 
-
 # ---------------------------------------------------------------- comments & review
 class CommentListCreateView(APIView):
     def get(self, request, document_id, version_id):
@@ -173,7 +164,6 @@ class CommentListCreateView(APIView):
         s.is_valid(raise_exception=True)
         comment = s.save(version=version, author=request.user)
         return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
-
 
 class ReviewView(APIView):
     def post(self, request, document_id, version_id):
@@ -209,7 +199,6 @@ class ReviewView(APIView):
                 Comment.objects.create(version=version, author=request.user, body=s.validated_data["comment"])
         return Response(VersionSerializer(version).data)
 
-
 # ---------------------------------------------------------------- per-file permissions
 class AccessListCreateView(APIView):
     def get(self, request, document_id):
@@ -226,7 +215,6 @@ class AccessListCreateView(APIView):
             defaults={"level": s.validated_data["level"], "granted_by": request.user},
         )
         return Response({"username": grant.user.username, "level": grant.level}, status=status.HTTP_201_CREATED)
-
 
 class AccessRevokeView(APIView):
     def delete(self, request, document_id, username):
